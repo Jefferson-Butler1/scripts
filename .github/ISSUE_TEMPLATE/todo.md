@@ -1,6 +1,6 @@
 ---
-name: General Issue
-about: Create a report to help us improve
+name: Todo
+about: adds functionality to a script or creates a new script
 title: "[ISSUE]"
 labels: ''
 assignees: 'Jefferson-Butler1'
