@@ -9,12 +9,12 @@ NC='\033[0m' # No Color
 # Function to list processes
 list_processes() {
     echo -e "${YELLOW}Processes using ports 8080, 9191, and 9090:${NC}"
-    lsof -P -i :8080,9191,9090 
+    lsof -P -i :8080,9191,9090,9292
 }
 
 # Function to kill processes
 kill_processes() {
-    pids=($(lsof -t -i :8080,9191,9090))
+    pids=($(lsof -t -i :8080,9191,9090,9292))
     if [ ${#pids[@]} -gt 0 ]; then
         echo -e "${RED}Killing processes...${NC}"
         for pid in "${pids[@]}"; do
