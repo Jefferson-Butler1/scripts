@@ -26,6 +26,12 @@ kill_processes() {
     fi
 }
 
+# Check if -k argument is provided
+if [[ "$1" == "-k" ]]; then
+    kill_processes
+    exit 0
+fi
+
 # Main script
 list_processes
 
