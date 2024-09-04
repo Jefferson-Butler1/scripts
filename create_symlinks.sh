@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory containing your scripts
-SCRIPT_DIR="$scripts"
+SCRIPT_DIR="$SCRIPTS"
 
 # Directory to store symlinks (should be in your PATH)
 SYMLINK_DIR="$HOME/.local/bin"
