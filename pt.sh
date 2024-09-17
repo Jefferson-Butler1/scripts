@@ -31,9 +31,9 @@ then
     exit 1
 fi
 
-# Run pytest in the current directory
-echo "Running Python tests in $current_dir"
-pytest $current_dir
+# Run pytest for all files matching the pattern **/*.test.py
+echo "Running Python tests in $current_dir and its subdirectories"
+find "$current_dir" -type f -name "*.test.py" | xargs pytest -v
 
 # Check the exit status
 if [ $? -eq 0 ]; then
