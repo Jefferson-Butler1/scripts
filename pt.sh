@@ -1,49 +1,70 @@
 #!/bin/bash
 
 # Get the current directory
-current_dir=$(pwd)
+current_dir=$PWD
 
-# Function to activate virtual environment
-activate_venv() {
-    # Check for venv in the current directory
-    if [ -d "venv" ]; then
-        source venv/bin/activate
-    elif [ -d ".venv" ]; then
-        source .venv/bin/activate
+# Function to create and activate virtual environment
+create_and_activate_venv() {
+    echo "Creating a fresh virtual environment..."
+    # Remove existing .venv if it exists
+    rm -rf .venv
+    # Create new virtual environment
+    python3 -m venv .venv
+    # Activate the new virtual environment
+    source .venv/bin/activate
+    # Install requirements
+    if [ -f "requirements.txt" ]; then
+        echo "Installing requirements from requirements.txt..."
+        pip install -r requirements.txt
     else
-        echo "No virtual environment found. Using system Python."
-        return 1
+        echo "requirements.txt not found. Installing pytest..."
+        pip install pytest
     fi
     return 0
 }
 
-# Activate virtual environment
-if activate_venv; then
-    echo "Virtual environment activated."
+# Create and activate virtual environment
+if create_and_activate_venv; then
+    echo "Virtual environment created and activated."
 else
-    echo "Proceeding with system Python."
-fi
-
-# Check if pytest is installed
-if ! command -v pytest &> /dev/null
-then
-    echo "pytest is not installed. Please install it using 'pip install pytest'"
+    echo "Failed to create or activate virtual environment. Exiting."
     exit 1
 fi
 
-# Run pytest for all files matching the pattern **/*.test.py
-echo "Running Python tests in $current_dir and its subdirectories"
-find "$current_dir" -type f -name "*.test.py" | xargs pytest -v
+# Add the project root to PYTHONPATH
+export PYTHONPATH="$current_dir:$PYTHONPATH"
+
+# Run pytest with improved discovery and verbose output
+echo "Running Python tests in $current_dir"
+pytest_output=$(pytest -v --tb=short -s --capture=no --color=yes "$current_dir/test" "$current_dir")
+exit_status=$?
+
+# Display pytest output with original colors
+echo "$pytest_output"
+
+# Display additional information with bat
+echo -e "\nAdditional Information:" | bat --style=header --color=always
+echo "$pytest_output" | grep -v '^\(======\|------\|______\)' | bat --style=plain --color=always
 
 # Check the exit status
-if [ $? -eq 0 ]; then
+if [ $exit_status -eq 0 ]; then
+    echo "All tests passed successfully!" | bat --style=header --color=always
+else
+    echo "Some tests failed. Please check the output above for details." | bat --style=header --color=always
+fi
+# Check the exit status
+if [ $exit_status -eq 0 ]; then
     echo "All tests passed successfully!"
 else
     echo "Some tests failed. Please check the output above for details."
 fi
 
-# Deactivate virtual environment if it was activated
-if [ -n "$VIRTUAL_ENV" ]; then
-    deactivate
-    echo "Virtual environment deactivated."
-fi
+# Deactivate virtual environment
+deactivate
+echo "Virtual environment deactivated."
+
+# Clean up the virtual environment
+rm -rf .venv
+echo "Virtual environment removed."
+
+exit $exit_status
