@@ -6,23 +6,33 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-# Function to list processes
+# Ports to manage
+PORTS=(8080 9191 9090 9292)
+
+# Function to list Node processes
 list_processes() {
-    echo -e "${YELLOW}Processes using ports 8080, 9191, and 9090:${NC}"
-    lsof -P -i :8080,9191,9090,9292
+    echo -e "${YELLOW}Node processes using ports ${PORTS[*]}:${NC}"
+    for port in "${PORTS[@]}"; do
+        echo "Port $port:"
+        lsof -i :$port -sTCP:LISTEN | grep node || echo "No Node.js process found on port $port"
+    done
 }
 
-# Function to kill processes
+# Function to kill Node processes
 kill_processes() {
-    pids=($(lsof -t -i :8080,9191,9090,9292))
-    if [ ${#pids[@]} -gt 0 ]; then
-        echo -e "${RED}Killing processes...${NC}"
-        for pid in "${pids[@]}"; do
-            kill -9 "$pid" 2>/dev/null
-        done
-        echo -e "${GREEN}Processes killed.${NC}"
+    local killed=false
+    for port in "${PORTS[@]}"; do
+        pids=$(lsof -ti:$port -sTCP:LISTEN)
+        if [ -n "$pids" ]; then
+            echo -e "${RED}Killing Node processes on port $port...${NC}"
+            echo "$pids" | xargs kill -9
+            killed=true
+        fi
+    done
+    if $killed; then
+        echo -e "${GREEN}Node processes killed.${NC}"
     else
-        echo -e "${YELLOW}No processes to kill.${NC}"
+        echo -e "${YELLOW}No Node processes to kill.${NC}"
     fi
 }
 
@@ -37,7 +47,7 @@ list_processes
 
 # Prompt user for action
 while true; do
-    print -n "${YELLOW}[K]ill all or [Q]uit${NC}"
+    print -n "${YELLOW}[K]ill all Node processes or [Q]uit ${NC}"
     read -k1 choice
     echo ""  # Move to a new line
     case "${(L)choice}" in

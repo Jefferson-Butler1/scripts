@@ -41,7 +41,7 @@ function run_be {
         fi
         open -a Docker
         docker-compose up -d
-        kill_process_on_port $BE_PORT
+        ports -k  # Kill existing Node processes
         yarn run dev | sed "s/^/[BE] /"
     ) &
 }
@@ -51,9 +51,7 @@ function run_fe {
     (
         cd "$FE_DIR" || exit 1
         echo -e "${GREEN}Changed to directory: $FE_DIR${NC}"
-        for port in "${FE_PORTS[@]}"; do
-            kill_process_on_port $port
-        done
+        ports -k  # Kill existing Node processes
         if ! lsof -i:$BE_PORT &> /dev/null; then
             echo -e "${RED}Warning: Backend is not running. You may want to start it.${NC}"
         fi
@@ -62,22 +60,13 @@ function run_fe {
     ) &
 }
 
-function kill_process_on_port {
-    local port=$1
-    lsof -ti:$port | xargs kill -9 2>/dev/null || true
-}
-
 function stop_all {
-    echo -e "${RED}Stopping all processes on specified ports...${NC}"
-    for port in "${ALL_PORTS[@]}"; do
-        kill_process_on_port $port
-    done
-    list_processes
+    echo -e "${RED}Stopping all Node processes on specified ports...${NC}"
+    ports -k
 }
 
 function list_processes {
-    echo -e "${BLUE}Listing processes on specified ports...${NC}"
-    lsof -i :$(IFS=,; echo "${ALL_PORTS[*]}")
+    ports
 }
 
 function run_all {
@@ -85,8 +74,10 @@ function run_all {
     run_be
     run_fe
     # Keep the script running
+    wait
 }
 
+open -a Docker
 # Main execution
 case "${1:-}" in
     ""|"run")
@@ -95,10 +86,14 @@ case "${1:-}" in
     "stop" | "kill")
         stop_all
         ;;
+    "list")
+        list_processes
+        ;;
     *)
-        echo "Usage: $0 [run|stop]"
+        echo "Usage: $0 [run|stop|list]"
         echo "  - Without arguments or 'run': starts both apps"
-        echo "  - 'stop': kills all processes on specified ports and lists remaining processes"
+        echo "  - 'stop': kills all Node processes on specified ports"
+        echo "  - 'list': lists Node processes on specified ports"
         exit 1
         ;;
 esac
