@@ -46,18 +46,23 @@ show_help() {
 	exit 0
 }
 
+readonly RED=$'\e[0;31m'
+readonly YELLOW=$'\e[0;33m'
+readonly GREEN=$'\e[0;32m'
+readonly BLUE=$'\e[0;34m'
+readonly NC=$'\e[0m' # No Color
 log() {
 	if [ "$VERBOSE" -eq 1 ]; then
-		echo "[INFO] $1"
+		echo "${BLUE} [INFO] ${NC} $1"
 	fi
 }
 
 warn() {
-	echo "[WARNING] $1" >&2
+	echo "${YELLOW}[WARNING]${NC} $1" >&2
 }
 
 error() {
-	echo "[ERROR] $1" >&2
+	echo "${RED}[ERROR]${NC}$1" >&2
 	exit 1
 }
 
@@ -122,7 +127,7 @@ extract_postgres_details() {
 		error "Failed to extract database credentials from URL. Check URL format."
 	fi
 
-	log "Successfully extracted database credentials"
+	log "${GREEN}Successfully extracted database credentials${NC}"
 	log "User: $POSTGRES_USER, Database: $DB_NAME"
 }
 
@@ -160,7 +165,7 @@ restore_backup_to_container() {
 		# Don't exit with error as pg_restore often returns non-zero even for non-fatal issues
 	fi
 
-	echo "Successfully restored database to container"
+	echo "${GREEN}Successfully restored database to container${NC}"
 	echo "Your new PostgreSQL URL is:"
 	echo "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:$PORT/$DB_NAME"
 }
