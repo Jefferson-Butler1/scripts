@@ -70,7 +70,7 @@ case "${1}" in
 "be")
 	run_be
 	;;
-*)
+"all")
 	run_fe &
 	run_be &
 	;;
