@@ -1,0 +1,51 @@
+#!/bin/bash
+pkill -f "Plex.app" 2>/dev/null || true
+rm -f ~/Library/Application\ Support/Plex
+
+# Auto-detect mode if not specified
+if [ -z "$1" ]; then
+    if [ -d "/Volumes/Plex-Data" ] || [ -d "/Volumes/Plex-Downloads" ]; then
+        MODE="external"
+    else
+        MODE="internal"
+    fi
+else
+    MODE="$1"
+fi
+
+case "$MODE" in
+    internal)
+        ln -s ~/Plex ~/Library/Application\ Support/Plex
+        echo "Switched to internal storage: ~/Plex"
+        ;;
+    external)
+        # Check which external path exists
+        if [ -d "/Volumes/Plex-Data" ]; then
+            ln -s /Volumes/Plex-Data ~/Library/Application\ Support/Plex
+            echo "Switched to external storage: /Volumes/Plex-Data"
+        elif [ -d "/Volumes/Plex-Downloads" ]; then
+            ln -s /Volumes/Plex-Downloads ~/Library/Application\ Support/Plex
+            echo "Switched to external storage: /Volumes/Plex-Downloads"
+        else
+            echo "Error: No external Plex volume found, falling back to internal"
+            ln -s ~/Plex ~/Library/Application\ Support/Plex
+        fi
+        ;;
+    auto)
+        # Same as no argument - auto-detect
+        if [ -d "/Volumes/Plex-Data" ] || [ -d "/Volumes/Plex-Downloads" ]; then
+            $0 external
+        else
+            $0 internal
+        fi
+        exit 0
+        ;;
+    *)
+        echo "Usage: $0 [internal|external|auto]"
+        echo "  internal - Use ~/Plex"
+        echo "  external - Use /Volumes/Plex-Data or /Volumes/Plex-Downloads"
+        echo "  auto/none - Auto-detect based on what's available"
+        exit 1
+        ;;
+esac
+# open -a "Plex"
